@@ -62,7 +62,7 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/taski_backend:latest  # И здесь секрет
+          tags: lichnyy/taski_backend:latest  # И здесь секрет
   frontend_tests:
     runs-on: ubuntu-latest
 
@@ -105,7 +105,7 @@ jobs:
         with:
           context: ./frontend/
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/taski_frontend:latest
+          tags: lichnyy/taski_frontend:latest
   build_gateway_and_push_to_docker_hub:
     name: Push gateway Docker image to DockerHub
     runs-on: ubuntu-latest
@@ -126,4 +126,4 @@ jobs:
           context: ./gateway/
           push: true
           # Тут вместо username должен быть ваш логин на Docker Hub
-          tags: ${{ secrets.DOCKER_USERNAME }}/taski_gateway:latest
+          tags: lichnyy/taski_gateway:latest
