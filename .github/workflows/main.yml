@@ -136,7 +136,11 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      
+
+      - name: Create .env file from GitHub Secrets
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master
         with:
@@ -146,6 +150,7 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           source: "docker-compose.production.yml"
           target: "taski"
+
       - name: Copy .env file to server
         uses: appleboy/scp-action@master
         with:
@@ -153,8 +158,9 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: ".env"  # Файл .env должен быть в корне репозитория
+          source: ".env"
           target: "taski"
+
       - name: Deploy application
         uses: appleboy/ssh-action@master
         with:
@@ -167,6 +173,8 @@ jobs:
             sudo docker compose -f docker-compose.production.yml pull
             sudo docker compose -f docker-compose.production.yml down
             sudo docker compose -f docker-compose.production.yml up -d
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate --noinput
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
             sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+      
+  
