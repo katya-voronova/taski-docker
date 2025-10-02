@@ -1,5 +1,7 @@
 # taski-docker
 
+![taski-docker CI/CD](https://github.com/katya-voronova/taski-docker/actions/workflows/main.yml/badge.svg)
+
 Простой TODO-проект с Django (backend), React (frontend) и Nginx gateway.
 
 ## Запуск
