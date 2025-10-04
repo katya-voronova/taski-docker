@@ -25,7 +25,6 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: 3.12
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools
@@ -78,11 +77,11 @@ jobs:
       run: |
         cd frontend/
         npm ci
-
     - name: Test frontend
       run: |
         cd frontend/
         npm run test
+        
   build_frontend_and_push_to_docker_hub:
     name: Push frontend Docker image to DockerHub
     runs-on: ubuntu-latest
@@ -134,7 +133,6 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-
       - name: Checkout repo
         uses: actions/checkout@v3
       - name: Create .env on server
