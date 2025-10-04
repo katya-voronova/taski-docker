@@ -42,11 +42,10 @@ jobs:
         cd backend/
         python manage.py test
 
-  # ▼▼▼ ДОБАВЛЯЕМ ЗДЕСЬ ▼▼▼
   build_and_push_to_docker_hub:
     name: Push Docker image to DockerHub
     runs-on: ubuntu-latest
-    needs: tests  # Ждём завершения тестов
+    needs: tests  
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -55,34 +54,29 @@ jobs:
       - name: Login to Docker 
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}  # Используем секреты!
+          username: ${{ secrets.DOCKER_USERNAME }}  
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Push to DockerHub
         uses: docker/build-push-action@v4
         with:
           context: ./backend/
           push: true
-          tags: lichnyy/taski_backend:latest  # И здесь секрет
+          tags: lichnyy/taski_backend:latest  
+
   frontend_tests:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Set up nodeJS
-      # Это готовый воркфлоу для установки Node.js на раннер
       uses: actions/setup-node@v3
       with:
-        # Это параметр воркфлоу, указывающий нужную версию Node.js
         node-version: 18
-
     - name: Install dependencies
-      # Эта команда устанавливает зависимости для фронтенда
       run: |
         cd frontend/
         npm ci
 
     - name: Test frontend
-      # Запускаем тесты
       run: |
         cd frontend/
         npm run test
@@ -124,9 +118,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./gateway/
-          push: true
-          # Тут вместо username должен быть ваш логин на Docker Hub
+          push: true 
           tags: lichnyy/taski_gateway:latest
+
   deploy:
     runs-on: ubuntu-latest
     needs: 
@@ -137,9 +131,28 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Create .env file from GitHub Secrets
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Create .env on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}          
+          script: |
+            mkdir -p ~/envs
+            cat << 'EOF' > ~/envs/taski.env            
+            POSTGRES_USER=django_user
+            POSTGRES_PASSWORD=mysecretpassword
+            POSTGRES_DB=django
+            DB_HOST=db
+            DB_PORT=5432
+            DEBUG=True
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            ALLOWED_HOSTS=localhost,127.0.0.1,123.123.123.123,noname.3utilities.com,backend,gateway
+            EOF
+            chmod 600 ~/envs/taski.env
 
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master
@@ -148,19 +161,8 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: "docker-compose.production.yml"
-          target: "taski"
-
-      - name: Copy .env file to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_KEY }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: ".env"
-          target: "taski"
-
+          source: 'docker-compose.production.yml'
+          target: 'taski'
       - name: Deploy application
         uses: appleboy/ssh-action@master
         with:
